@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/elazarl/goproxy"
+	"github.com/zwczou/goproxy"
 )
 
 var unauthorizedMsg = []byte("407 Proxy Authentication Required")
@@ -68,7 +68,7 @@ func BasicConnect(realm string, f func(user, passwd string) bool) goproxy.HttpsH
 			ctx.Resp = BasicUnauthorized(ctx.Req, realm)
 			return goproxy.RejectConnect, host
 		}
-		return goproxy.OkConnect, host
+		return nil, host
 	})
 }
 
