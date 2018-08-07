@@ -186,6 +186,7 @@ func (proxy *ProxyHttpServer) handleHttps(w http.ResponseWriter, r *http.Request
 			defer rawClientTls.Close()
 			clientTlsReader := bufio.NewReader(rawClientTls)
 			req, err := http.ReadRequest(clientTlsReader)
+			var resp *http.Response
 			for {
 				//for !isEof(clientTlsReader) {
 				var ctx = &ProxyCtx{Req: req, Session: atomic.AddInt64(&proxy.sess, 1), proxy: proxy, UserData: ctx.UserData}
@@ -207,7 +208,7 @@ func (proxy *ProxyHttpServer) handleHttps(w http.ResponseWriter, r *http.Request
 				// information URL in the context when does HTTPS MITM
 				ctx.Req = req
 
-				req, resp := proxy.filterRequest(req, ctx)
+				req, resp = proxy.filterRequest(req, ctx)
 				if resp == nil {
 					if err != nil {
 						ctx.Warnf("Illegal URL %s", "https://"+r.Host+req.URL.Path)
