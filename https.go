@@ -223,9 +223,9 @@ func (proxy *ProxyHttpServer) handleHttps(w http.ResponseWriter, r *http.Request
 					ctx.Logf("resp %v", resp.Status)
 				}
 				resp = proxy.filterResponse(resp, ctx)
-				defer resp.Body.Close()
 				resp.Write(rawClientTls)
 				req, err = http.ReadRequest(clientTlsReader)
+				resp.Body.Close()
 
 				/*
 					text := resp.Status
