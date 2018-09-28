@@ -186,7 +186,15 @@ func (proxy *ProxyHttpServer) handleHttps(w http.ResponseWriter, r *http.Request
 			defer rawClientTls.Close()
 			clientTlsReader := bufio.NewReader(rawClientTls)
 			req, err := http.ReadRequest(clientTlsReader)
+			if err != nil && err != io.EOF {
+				return
+			}
+			if req.Header.Get("Upgrade") == "websocket" {
+				proxy.handeWebsocket(ctx, req, clientTlsReader, rawClientTls)
+				return
+			}
 			var resp *http.Response
+			// 处理websocket
 			for {
 				//for !isEof(clientTlsReader) {
 				var ctx = &ProxyCtx{Req: req, Session: atomic.AddInt64(&proxy.sess, 1), proxy: proxy, UserData: ctx.UserData}
