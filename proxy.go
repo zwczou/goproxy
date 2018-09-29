@@ -26,7 +26,7 @@ type ProxyHttpServer struct {
 	respHandlers    []RespHandler
 	httpsHandlers   []HttpsHandler
 	Tr              *http.Transport
-	handleWebsocket func(int, int, []byte) ([]byte, error)
+	handleWebsocket func(string, int, int, []byte) ([]byte, error)
 	// ConnectDial will be used to create TCP connections for CONNECT requests
 	// if nil Tr.Dial will be used
 	ConnectDial func(network string, addr string) (net.Conn, error)

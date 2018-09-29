@@ -67,7 +67,7 @@ func (proxy *ProxyHttpServer) websocket(ctx *ProxyCtx, req *http.Request, br *bu
 		for {
 			msgType, msg, err := src.ReadMessage()
 			if err == nil && proxy.handleWebsocket != nil {
-				msg, err = proxy.handleWebsocket(typ, msgType, msg)
+				msg, err = proxy.handleWebsocket(url, typ, msgType, msg)
 			}
 			if err != nil {
 				m := websocket.FormatCloseMessage(websocket.CloseNormalClosure, fmt.Sprintf("%v", err))
@@ -105,6 +105,6 @@ func (proxy *ProxyHttpServer) websocket(ctx *ProxyCtx, req *http.Request, br *bu
 	return
 }
 
-func (proxy *ProxyHttpServer) SetWebsocketHandler(f func(typ, msgType int, msg []byte) ([]byte, error)) {
+func (proxy *ProxyHttpServer) SetWebsocketHandler(f func(url string, typ, msgType int, msg []byte) ([]byte, error)) {
 	proxy.handleWebsocket = f
 }
