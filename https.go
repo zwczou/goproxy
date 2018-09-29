@@ -190,7 +190,7 @@ func (proxy *ProxyHttpServer) handleHttps(w http.ResponseWriter, r *http.Request
 				return
 			}
 			if req.Header.Get("Upgrade") == "websocket" {
-				proxy.handeWebsocket(ctx, req, clientTlsReader, rawClientTls)
+				proxy.websocket(ctx, req, clientTlsReader, rawClientTls)
 				return
 			}
 			var resp *http.Response

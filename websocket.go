@@ -22,7 +22,7 @@ func (r *ResponseHijack) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	return r.conn, rw, nil
 }
 
-func (proxy *ProxyHttpServer) handeWebsocket(ctx *ProxyCtx, req *http.Request, br *bufio.Reader, rawClientTls *tls.Conn) {
+func (proxy *ProxyHttpServer) websocket(ctx *ProxyCtx, req *http.Request, br *bufio.Reader, rawClientTls *tls.Conn) {
 	rw := &ResponseHijack{httptest.NewRecorder(), br, rawClientTls}
 	requestHeader := http.Header{}
 	if origin := req.Header.Get("Origin"); origin != "" {
@@ -59,11 +59,16 @@ func (proxy *ProxyHttpServer) handeWebsocket(ctx *ProxyCtx, req *http.Request, b
 	if err != nil {
 		ctx.Warnf("websocket: can not upgrade %s", err)
 	}
+	defer connPub.Close()
+
 	errClient := make(chan error, 1)
 	errBackend := make(chan error, 1)
-	replicateWebsocketConn := func(dst, src *websocket.Conn, errc chan error) {
+	replicateWebsocketConn := func(dst, src *websocket.Conn, errc chan error, typ int) {
 		for {
 			msgType, msg, err := src.ReadMessage()
+			if err == nil && proxy.handleWebsocket != nil {
+				msg, err = proxy.handleWebsocket(typ, msgType, msg)
+			}
 			if err != nil {
 				m := websocket.FormatCloseMessage(websocket.CloseNormalClosure, fmt.Sprintf("%v", err))
 				if e, ok := err.(*websocket.CloseError); ok {
@@ -83,8 +88,8 @@ func (proxy *ProxyHttpServer) handeWebsocket(ctx *ProxyCtx, req *http.Request, b
 		}
 	}
 
-	go replicateWebsocketConn(connPub, connBackend, errClient)
-	go replicateWebsocketConn(connBackend, connPub, errBackend)
+	go replicateWebsocketConn(connPub, connBackend, errClient, 1)
+	go replicateWebsocketConn(connBackend, connPub, errBackend, 0)
 
 	var message string
 	select {
@@ -98,4 +103,8 @@ func (proxy *ProxyHttpServer) handeWebsocket(ctx *ProxyCtx, req *http.Request, b
 		ctx.Warnf(message, err)
 	}
 	return
+}
+
+func (proxy *ProxyHttpServer) SetWebsocketHandler(f func(typ, msgType int, msg []byte) ([]byte, error)) {
+	proxy.handleWebsocket = f
 }
